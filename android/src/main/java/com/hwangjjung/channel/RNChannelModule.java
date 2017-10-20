@@ -2,6 +2,8 @@
 package com.hwangjjung.channel;
 
 
+import android.content.Context;
+
 import com.facebook.react.bridge.ReadableMap;
 
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
@@ -13,11 +15,14 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Promise;
 
+import java.util.HashMap;
+
+
 
 public class RNChannelModule extends ReactContextBaseJavaModule {
 
   private final ReactApplicationContext reactContext;
-
+  private Boolean isCheckedIn = false;
   public RNChannelModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
@@ -45,23 +50,46 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
     }
   }
 
-  private CheckIn addMetaData(CheckIn checkIn, ReadableMap metaData) throws Exception {
+  private CheckIn withData(CheckIn checkIn, ReadableMap metaData) throws Exception {
     ReadableMapKeySetIterator iterator = metaData.keySetIterator();
-    while (iterator.hasNextKey()) {
+      CheckIn checkInChain = checkIn;
+      while (iterator.hasNextKey()) {
       String key = iterator.nextKey();
       String value = getStringFromReadableMap(metaData, key);
-      checkIn.withMeta(key, value);
+      switch(key) {
+        case "userId": checkInChain = checkInChain.withUserId(value); break;
+        case "userID": checkInChain = checkInChain.withUserId(value); break;
+        case "userName": checkInChain = checkInChain.withName(value); break;
+        case "name": checkInChain = checkInChain.withName(value); break;
+        case "mobile": checkInChain = checkInChain.withMobileNumber(value); break;
+        case "mobileNumber": checkInChain = checkInChain.withMobileNumber(value); break;
+        case "avatarUrl": checkInChain = checkInChain.withAvatarUrl(value); break;
+        default: checkInChain = checkInChain.withMeta(key, value);
+      }
     }
-    return checkIn;
+    return checkInChain;
+  }
+  
+  @ReactMethod
+  public void track(String name, ReadableMap data) throws Exception {
+    ReadableMapKeySetIterator iterator = data.keySetIterator();
+    HashMap<String, Object> properties = new HashMap<>();
+    Context context = getReactApplicationContext();
+    while (iterator.hasNextKey()) {
+      String key = iterator.nextKey();
+      String value = getStringFromReadableMap(data, key);
+      properties.put(key, value);
+    }
+    ChannelPlugin.track(context, name, properties);
   }
 
   @ReactMethod
   public void logout() {
     ChannelPlugin.checkOut();
   }
-  
+
   @ReactMethod
-  public void login(Promise promise) {
+  public void ananymousLogin(Promise promise) {
     try {
       ChannelPlugin.checkIn(new RNOnCheckInListener(promise));
     } catch(Exception e) {
@@ -69,69 +97,18 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
     }
   }
 
-
   @ReactMethod
-  public void login(String userId, Promise promise) throws Exception {
+  public void login(ReadableMap data, Promise promise) throws Exception {
     try {
-      CheckIn checkIn = CheckIn.create()
-              .withUserId(userId);
-      ChannelPlugin.checkIn(checkIn, new RNOnCheckInListener(promise));
-    } catch(Exception e) {
-        e.printStackTrace();
-    }
-  }
+      if (isCheckedIn) {
+        return;
+      } else {
+        CheckIn checkIn = CheckIn.create();
+        CheckIn checkInWithData = withData(checkIn, data);
+        ChannelPlugin.checkIn(checkInWithData, new RNOnCheckInListener(promise));
+        isCheckedIn = true;
+      }
 
-
-  @ReactMethod
-  public void login(String userId, ReadableMap metaData, Promise promise) throws Exception {
-    try {
-      CheckIn checkIn = CheckIn.create()
-              .withUserId(userId);
-      CheckIn checkInWithMeta = addMetaData(checkIn, metaData);
-      ChannelPlugin.checkIn(checkInWithMeta, new RNOnCheckInListener(promise));
-    } catch(Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  @ReactMethod
-  public void login(String userId, String name, ReadableMap metaData, Promise promise)  throws Exception {
-    try {
-      CheckIn checkIn = CheckIn.create()
-              .withUserId(userId)
-              .withName(name);
-      CheckIn checkInWithMeta = addMetaData(checkIn, metaData);
-      ChannelPlugin.checkIn(checkInWithMeta, new RNOnCheckInListener(promise));
-    } catch(Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-
-  @ReactMethod
-  public void login(String userId, String name, String mobile, ReadableMap metaData, Promise promise)  throws Exception {
-    try {
-      CheckIn checkIn = CheckIn.create()
-              .withUserId(userId)
-              .withName(name)
-              .withMobileNumber(mobile);
-      CheckIn checkInWithMeta = addMetaData(checkIn, metaData);
-      ChannelPlugin.checkIn(checkInWithMeta, new RNOnCheckInListener(promise));
-    } catch(Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  @ReactMethod
-  public void login(String userId, String name, String mobile, String avartarUrl, ReadableMap metaData, Promise promise)  throws Exception {
-    try {
-      CheckIn checkIn = CheckIn.create()
-              .withUserId(userId)
-              .withName(name)
-              .withMobileNumber(mobile)
-              .withAvatarUrl(avartarUrl);
-      CheckIn checkInWithMeta = addMetaData(checkIn, metaData);
-      ChannelPlugin.checkIn(checkInWithMeta, new RNOnCheckInListener(promise));
     } catch(Exception e) {
       e.printStackTrace();
     }
