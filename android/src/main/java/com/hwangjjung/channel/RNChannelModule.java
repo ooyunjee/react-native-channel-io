@@ -3,10 +3,13 @@ package com.hwangjjung.channel;
 
 
 import android.content.Context;
+import android.util.Log;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
 
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.WritableMap;
 import com.zoyi.channel.plugin.android.ChannelPlugin;
 import com.zoyi.channel.plugin.android.CheckIn;
 
@@ -14,15 +17,16 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Promise;
+import com.zoyi.channel.plugin.android.global.PrefSupervisor;
+import com.zoyi.channel.plugin.android.push.ChannelPushManager;
 
 import java.util.HashMap;
-
+import java.util.Map;
 
 
 public class RNChannelModule extends ReactContextBaseJavaModule {
 
   private final ReactApplicationContext reactContext;
-  private Boolean isCheckedIn = false;
   public RNChannelModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
@@ -45,6 +49,8 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
         }
       case Boolean:
         return String.valueOf(map.getBoolean(key));
+      case Null:
+        return "NULL";
       default:
         throw new Exception("Unknown data type: " + map.getType(key).name() + " for metaData key " + key );
     }
@@ -64,12 +70,13 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
         case "mobile": checkInChain = checkInChain.withMobileNumber(value); break;
         case "mobileNumber": checkInChain = checkInChain.withMobileNumber(value); break;
         case "avatarUrl": checkInChain = checkInChain.withAvatarUrl(value); break;
+        case "pushToken": PrefSupervisor.setDeviceToken(this.reactContext, value);  break;
         default: checkInChain = checkInChain.withMeta(key, value);
       }
     }
     return checkInChain;
   }
-  
+
   @ReactMethod
   public void track(String name, ReadableMap data) throws Exception {
     ReadableMapKeySetIterator iterator = data.keySetIterator();
@@ -85,8 +92,19 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void logout() {
+    Log.d("channel", "check Out");
     ChannelPlugin.checkOut();
   }
+
+
+
+  @ReactMethod
+  public void onTokenRefresh(String token) {
+    Log.d("channel", "onTokenRefresh");
+    Log.d("channel", token);
+    PrefSupervisor.setDeviceToken(this.reactContext , token);
+  }
+
 
   @ReactMethod
   public void ananymousLogin(Promise promise) {
@@ -100,17 +118,40 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void login(ReadableMap data, Promise promise) throws Exception {
     try {
-      if (isCheckedIn) {
-        return;
-      } else {
         CheckIn checkIn = CheckIn.create();
         CheckIn checkInWithData = withData(checkIn, data);
         ChannelPlugin.checkIn(checkInWithData, new RNOnCheckInListener(promise));
-        isCheckedIn = true;
-      }
-
+        Log.d("channel", "check In");
     } catch(Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  @ReactMethod
+  public void onMessageReceive(ReadableMap data, Promise promise) throws Exception {
+    try {
+      Log.d("channel", "onMessageReceive");
+      ReadableMapKeySetIterator iterator = data.keySetIterator();
+      Map<String, String> messages = new HashMap<>();
+      while (iterator.hasNextKey()) {
+        String key = iterator.nextKey();
+        String value = getStringFromReadableMap(data, key);
+        messages.put(key, value);
+      }
+      WritableMap resultMap = Arguments.createMap();
+
+      if (ChannelPushManager.isChannelPluginMessage(messages)) {
+        Log.d("channel", "handlePush");
+        ChannelPushManager.handlePush(this.reactContext, messages);
+        resultMap.putBoolean("success", true);
+        promise.resolve(resultMap);
+      } else {
+        resultMap.putBoolean("success", false);
+        promise.resolve(resultMap);
+      }
+    } catch(Exception e) {
+      e.printStackTrace();
+      promise.reject(e);
     }
   }
 }
