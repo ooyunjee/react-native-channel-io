@@ -91,8 +91,15 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void launch() {
+    Log.d("Channel", "launch");
+    Context context = this.getReactApplicationContext();
+    ChannelPlugin.launch(context);
+   }
+
+  @ReactMethod
   public void logout() {
-    Log.d("channel", "check Out");
+    Log.d("Channel", "check Out");
     ChannelPlugin.checkOut();
   }
 
@@ -100,8 +107,8 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void onTokenRefresh(String token) {
-    Log.d("channel", "onTokenRefresh");
-    Log.d("channel", token);
+    Log.d("Channel", "onTokenRefresh");
+    Log.d("Channel", token);
     PrefSupervisor.setDeviceToken(this.reactContext , token);
   }
 
@@ -121,7 +128,7 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
         CheckIn checkIn = CheckIn.create();
         CheckIn checkInWithData = withData(checkIn, data);
         ChannelPlugin.checkIn(checkInWithData, new RNOnCheckInListener(promise));
-        Log.d("channel", "check In");
+        Log.d("Channel", "check In");
     } catch(Exception e) {
       e.printStackTrace();
     }
@@ -130,7 +137,7 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void onMessageReceive(ReadableMap data, Promise promise) throws Exception {
     try {
-      Log.d("channel", "onMessageReceive");
+      Log.d("Channel", "onMessageReceive");
       ReadableMapKeySetIterator iterator = data.keySetIterator();
       Map<String, String> messages = new HashMap<>();
       while (iterator.hasNextKey()) {
@@ -141,7 +148,7 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
       WritableMap resultMap = Arguments.createMap();
 
       if (ChannelPushManager.isChannelPluginMessage(messages)) {
-        Log.d("channel", "handlePush");
+        Log.d("Channel", "handlePush");
         ChannelPushManager.handlePush(this.reactContext, messages);
         resultMap.putBoolean("success", true);
         promise.resolve(resultMap);
