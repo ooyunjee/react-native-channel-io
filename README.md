@@ -1,6 +1,9 @@
 
 # react-native-channel-io
 
+현재 안드로이드 버전만 지원합니다.
+문서 업데이트는 작업 중에 있습니다.
+
 ## Getting started
 
 `$ npm install react-native-channel-io --save`
