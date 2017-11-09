@@ -24,14 +24,14 @@ public class RNOnCheckInListener implements OnCheckInListener {
     @Override
     public void onSuccessed() {
         WritableMap map = Arguments.createMap();
-        Log.d("Channel", "onSuccessed");
+        Log.d("RNChannel", "CheckInOnSuccessed");
         map.putBoolean("success", true);
         this.promise.resolve(map);
     }
 
     @Override
     public void onFailed(ChannelException ex) {
-        Log.d("Channel", "onFailed");
+        Log.d("RNChannel", "CheckInOnFailed");
         this.promise.reject(RN_CHANNEL_CHECK_IN_ERROR, new RNChannelException(ex.getStatusCode()));
     }
 }

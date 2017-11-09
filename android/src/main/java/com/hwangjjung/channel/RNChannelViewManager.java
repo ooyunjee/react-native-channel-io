@@ -23,13 +23,13 @@ public class RNChannelViewManager extends SimpleViewManager<ChannelView> {
     protected ChannelView createViewInstance(ThemedReactContext themedReactContext) {
         ChannelView channelView = new ChannelView(themedReactContext);
         channelView.setVisibility(View.VISIBLE);
-        Log.d("Channel", "createViewInstance");
+        Log.d("RNChannel", "createViewInstance");
         return channelView;
     }
 
     @Override
     public void updateExtraData(ChannelView root, Object extraData) {
-        Log.d("Channel:updateExtraData",String.valueOf(extraData));
+        Log.d("RNChannel:updateExtraData",String.valueOf(extraData));
         root.setButtonGravity((int)extraData);
     }
 }

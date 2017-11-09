@@ -92,26 +92,23 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void launch() {
-    Log.d("Channel", "launch");
+    Log.d("RNChannel", "launch");
     Context context = this.getReactApplicationContext();
     ChannelPlugin.launch(context);
    }
 
   @ReactMethod
   public void logout() {
-    Log.d("Channel", "check Out");
+    Log.d("RNChannel", "check Out");
     ChannelPlugin.checkOut();
   }
 
-
-
   @ReactMethod
   public void onTokenRefresh(String token) {
-    Log.d("Channel", "onTokenRefresh");
-    Log.d("Channel", token);
+    Log.d("RNChannel", "onTokenRefresh");
+    Log.d("RNChannel", token);
     PrefSupervisor.setDeviceToken(this.reactContext , token);
   }
-
 
   @ReactMethod
   public void ananymousLogin(Promise promise) {
@@ -128,7 +125,7 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
         CheckIn checkIn = CheckIn.create();
         CheckIn checkInWithData = withData(checkIn, data);
         ChannelPlugin.checkIn(checkInWithData, new RNOnCheckInListener(promise));
-        Log.d("Channel", "check In");
+        Log.d("RNChannel", "check In");
     } catch(Exception e) {
       e.printStackTrace();
     }
@@ -137,7 +134,7 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void onMessageReceive(ReadableMap data, Promise promise) throws Exception {
     try {
-      Log.d("Channel", "onMessageReceive");
+      Log.d("RNChannel", "onMessageReceive");
       ReadableMapKeySetIterator iterator = data.keySetIterator();
       Map<String, String> messages = new HashMap<>();
       while (iterator.hasNextKey()) {
@@ -148,7 +145,7 @@ public class RNChannelModule extends ReactContextBaseJavaModule {
       WritableMap resultMap = Arguments.createMap();
 
       if (ChannelPushManager.isChannelPluginMessage(messages)) {
-        Log.d("Channel", "handlePush");
+        Log.d("RNChannel", "handlePush");
         ChannelPushManager.handlePush(this.reactContext, messages);
         resultMap.putBoolean("success", true);
         promise.resolve(resultMap);
