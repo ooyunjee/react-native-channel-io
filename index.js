@@ -36,7 +36,7 @@ class ChannelViewComponent extends Component {
   }
 
   componentDidMount() {
-    const timoutId = setTimeout(() => {
+    const timoutId = setinterval(() => {
       this.setState({
         update: !this.state.update,
       });
@@ -45,7 +45,7 @@ class ChannelViewComponent extends Component {
   }
   
   componentWillUnmount() {
-   clearTimeout(this.state.timoutId);
+   clearInterval(this.state.timoutId);
   }
 
   render() {
