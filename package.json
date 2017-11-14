@@ -1,6 +1,6 @@
 {
   "name": "react-native-channel-io",
-  "version": "v1.0.4",
+  "version": "v1.0.5",
   "description": "channel.io 를 react-native 앱에서 사용하기 위한 모듈입니다.",
   "main": "index.js",
   "scripts": {
